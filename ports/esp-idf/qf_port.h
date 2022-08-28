@@ -38,7 +38,7 @@
 #define QF_THREAD_TYPE        StaticTask_t
 
 /* The maximum number of active objects in the application, see NOTE1 */
-#define QF_MAX_ACTIVE         32U
+#define QF_MAX_ACTIVE         16U
 
 /* QF interrupt disabling for FreeRTOS-ESP32 (task level), see NOTE2 */
 #define QF_INT_DISABLE()      portENTER_CRITICAL(&QF_esp32mux)
@@ -51,7 +51,7 @@
 
 #include "freertos/FreeRTOS.h"  /* FreeRTOS master include file, see NOTE3 */
 #include "freertos/task.h"      /* FreeRTOS task management */
-#include "queue.h"              /* FreeRTOS queue management */
+#include "freertos/queue.h"              /* FreeRTOS queue management */
 
 #include "qep_port.h"  /* QEP port */
 #include "qequeue.h"   /* this QP port uses the native QF event queue */
@@ -60,6 +60,15 @@
 
 /* global spinlock "mutex" for all critical sections in QF (see NOTE4) */
 extern PRIVILEGED_DATA portMUX_TYPE QF_esp32mux;
+
+#if defined( CONFIG_QPC_PINNED_TO_CORE_0 )
+    #define QPC_CPU_NUM         PRO_CPU_NUM
+#elif defined( CONFIG_QPC_PINNED_TO_CORE_1 )
+    #define QPC_CPU_NUM         APP_CPU_NUM
+#else
+    /* Defaults to APP_CPU */
+    #define QPC_CPU_NUM         APP_CPU_NUM
+#endif
 
 /* the "FromISR" versions of the QF APIs, see NOTE3 */
 #ifdef Q_SPY
